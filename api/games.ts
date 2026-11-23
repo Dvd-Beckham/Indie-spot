@@ -13,6 +13,10 @@ interface PopularityPrimitive {
   value: number;
 }
 
+interface IGDBCountResponse {
+  count: number;
+}
+
 function getQueryParam(req: VercelRequest, key: string, fallback = ''): string {
   const fromQuery = req.query?.[key];
   if (typeof fromQuery === 'string') return fromQuery;
@@ -98,11 +102,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const id = getQueryParam(req, 'id');
     const mode = getQueryParam(req, 'mode');
     const page = getQueryParam(req, 'page', '1');
-    const limit = getQueryParam(req, 'limit', '24');
+    const limit = getQueryParam(req, 'limit', '50');
 
-    const safeLimit = Math.min(Math.max(Number(limit) || 24, 1), 100);
+    const safeLimit = Math.min(Math.max(Number(limit) || 50, 1), 100);
     const safePage = Math.max(Number(page) || 1, 1);
     const offset = (safePage - 1) * safeLimit;
+
+    res.setHeader('Access-Control-Expose-Headers', 'X-Total-Count');
 
     // 1. Detalhes de um jogo específico
     if (id) {
@@ -111,6 +117,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         token,
         `${BASE_FIELDS} where id = ${Number(id)}; limit 1;`
       );
+      res.setHeader('X-Total-Count', String(games.length));
       return res.status(200).json(games);
     }
 
@@ -129,13 +136,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const popularIndies = await queryIGDB<IGDBGameRaw[]>(
           'games',
           token,
-          `${BASE_FIELDS} where id = (${ids}) & genres = (32) & cover != null; limit 100;`
+          `${BASE_FIELDS} where id = (${ids}) & genres = (32) & cover != null; limit 150;`
         );
 
         popularIndies.sort(
           (a, b) => (scoreByGameId.get(b.id) ?? 0) - (scoreByGameId.get(a.id) ?? 0)
         );
 
+        res.setHeader('X-Total-Count', String(popularIndies.length));
         return res.status(200).json(popularIndies.slice(offset, offset + safeLimit));
       }
 
@@ -144,6 +152,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         token,
         `${BASE_FIELDS} where genres = (32) & cover != null & rating_count != null; sort rating_count desc; limit ${safeLimit}; offset ${offset};`
       );
+      res.setHeader('X-Total-Count', String(fallback.length));
       return res.status(200).json(fallback);
     }
 
@@ -156,10 +165,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       );
 
       candidates.sort((a, b) => computeFeaturedScore(b) - computeFeaturedScore(a));
+      res.setHeader('X-Total-Count', String(candidates.length));
       return res.status(200).json(candidates.slice(offset, offset + safeLimit));
     }
 
-    // 4. Busca e filtros avançados da página Explorar
+    // 4. Busca e filtros avançados da página Explorar + contagem total real
     const filters: string[] = ['genres = (32)', 'cover != null'];
 
     if (search) {
@@ -192,11 +202,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       sortClause = 'sort name asc;';
     }
 
-    const games = await queryIGDB<IGDBGameRaw[]>(
-      'games',
-      token,
-      `${BASE_FIELDS} where ${filters.join(' & ')}; ${sortClause} limit ${safeLimit}; offset ${offset};`
-    );
+    const whereClause = `where ${filters.join(' & ')};`;
+
+    const [games, countRes] = await Promise.all([
+      queryIGDB<IGDBGameRaw[]>(
+        'games',
+        token,
+        `${BASE_FIELDS} ${whereClause} ${sortClause} limit ${safeLimit}; offset ${offset};`
+      ),
+      queryIGDB<IGDBCountResponse>('games/count', token, whereClause).catch(() => ({
+        count: 0,
+      })),
+    ]);
+
+    const totalCount = countRes.count || offset + games.length;
+    res.setHeader('X-Total-Count', String(totalCount));
     return res.status(200).json(games);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Erro interno';

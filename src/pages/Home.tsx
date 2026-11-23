@@ -14,7 +14,7 @@ export function Home() {
   const isPopular = activeTab === 'popular';
 
   return (
-    <section style={{ padding: '2rem 1.5rem', maxWidth: 1200, margin: '0 auto' }}>
+    <section className="page-container">
       <div
         style={{
           display: 'flex',
@@ -52,7 +52,6 @@ export function Home() {
         </Link>
       </div>
 
-      {/* Abas de alternância */}
       <div
         role="tablist"
         aria-label="Filtrar vitrine da página inicial"
@@ -141,8 +140,8 @@ export function Home() {
         />
       )}
 
-     {!loading && !error && games.length > 0 && (
-        <GameGrid games={games.slice(0, 30)} />
+      {!loading && !error && games.length > 0 && (
+        <GameGrid games={games.slice(0, 50)} />
       )}
     </section>
   );

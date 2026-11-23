@@ -4,7 +4,7 @@ import { fetchIndieGames } from '../services/igdbService';
 import type { GameFeedMode, GameSortOption } from '../services/igdbService';
 import { useDebounce } from './useDebounce';
 
-const PAGE_SIZE = 24;
+const PAGE_SIZE = 50;
 
 export function useGames(filters?: {
   search?: string;
@@ -24,12 +24,13 @@ export function useGames(filters?: {
   const filterKey = `${debouncedSearch}|${genre}|${platform}|${minRating}|${sort}|${mode ?? ''}`;
 
   const [games, setGames] = useState<IGDBGame[]>([]);
+  const [total, setTotal] = useState(0);
   const [pagination, setPagination] = useState({ filterKey, page: 1 });
-  const [hasNextPage, setHasNextPage] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const page = pagination.filterKey === filterKey ? pagination.page : 1;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   useEffect(() => {
     let active = true;
@@ -46,10 +47,10 @@ export function useGames(filters?: {
       page,
       limit: PAGE_SIZE,
     })
-      .then((data) => {
+      .then((result) => {
         if (!active) return;
-        setGames(data);
-        setHasNextPage(data.length === PAGE_SIZE);
+        setGames(result.games);
+        setTotal(result.total);
       })
       .catch((err: Error) => {
         if (active) setError(err.message);
@@ -63,27 +64,27 @@ export function useGames(filters?: {
     };
   }, [debouncedSearch, genre, platform, minRating, sort, mode, page]);
 
-  const nextPage = () => {
-    if (!loading && hasNextPage) {
-      setPagination({ filterKey, page: page + 1 });
+  const goToPage = (targetPage: number) => {
+    const clamped = Math.min(Math.max(targetPage, 1), totalPages);
+    if (!loading && clamped !== page) {
+      setPagination({ filterKey, page: clamped });
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
-  const prevPage = () => {
-    if (!loading && page > 1) {
-      setPagination({ filterKey, page: page - 1 });
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
+  const nextPage = () => goToPage(page + 1);
+  const prevPage = () => goToPage(page - 1);
 
   return {
     games,
+    total,
     loading,
     error,
     page,
-    hasNextPage,
+    totalPages,
+    hasNextPage: page < totalPages,
     hasPrevPage: page > 1,
+    goToPage,
     nextPage,
     prevPage,
   };

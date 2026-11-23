@@ -3,6 +3,11 @@ import type { IGDBGame } from '../types/game';
 export type GameFeedMode = 'featured' | 'popular';
 export type GameSortOption = 'popular' | 'rating' | 'recent' | 'name';
 
+export interface GamesPageResult {
+  games: IGDBGame[];
+  total: number;
+}
+
 export function formatIGDBImage(
   url?: string,
   size: 't_cover_big' | 't_screenshot_big' = 't_cover_big'
@@ -23,7 +28,7 @@ export async function fetchIndieGames(params?: {
   mode?: GameFeedMode;
   page?: number;
   limit?: number;
-}): Promise<IGDBGame[]> {
+}): Promise<GamesPageResult> {
   const query = new URLSearchParams();
   if (params?.search) query.set('search', params.search);
   if (params?.genre) query.set('genre', params.genre);
@@ -38,7 +43,12 @@ export async function fetchIndieGames(params?: {
   if (!response.ok) {
     throw new Error('Erro ao carregar catálogo de jogos indie');
   }
-  return response.json();
+
+  const games: IGDBGame[] = await response.json();
+  const totalHeader = Number(response.headers.get('X-Total-Count'));
+  const total = Number.isFinite(totalHeader) && totalHeader > 0 ? totalHeader : games.length;
+
+  return { games, total };
 }
 
 export async function fetchGameById(id: string): Promise<IGDBGame | null> {
