@@ -105,18 +105,19 @@ npx vercel dev
 ## Prints das Telas Principais
 
 ### Página Inicial — Destaques Indie e Populares
-
+[docs/prints/home.png]
 
 ### Explorar Catálogo — Busca, Filtros e Paginação
-
+[docs/prints/explorar.png]
 
 ### Detalhes do Jogo
-
+[docs/prints/detalhes.png]
 
 ### Meus Favoritos
-
+[docs/prints/favoritos.png]
 
 ### Sobre o Projeto
+[docs/prints/sobre.png]
 
 
 ## Tecnologias Utilizadas
