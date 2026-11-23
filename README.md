@@ -104,8 +104,6 @@ npx vercel dev
 
 ## Prints das Telas Principais
 
-> **Como adicionar seus prints:** salve as capturas de tela na pasta `docs/prints/` do repositório com os nomes abaixo e faça o commit no GitHub. As imagens aparecerão automaticamente nesta seção.
-
 ### Página Inicial — Destaques Indie e Populares
 
 
