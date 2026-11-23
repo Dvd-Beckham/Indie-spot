@@ -18,22 +18,15 @@ export function useGames(filters?: {
 
   const [games, setGames] = useState<IGDBGame[]>([]);
   const [pagination, setPagination] = useState({ filterKey, page: 1 });
-  const [hasMore, setHasMore] = useState(true);
+  const [hasNextPage, setHasNextPage] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const page = pagination.filterKey === filterKey ? pagination.page : 1;
 
   useEffect(() => {
     let active = true;
-    const isFirstPage = page === 1;
-
-    if (isFirstPage) {
-      setLoading(true);
-    } else {
-      setLoadingMore(true);
-    }
+    setLoading(true);
     setError(null);
 
     fetchIndieGames({
@@ -45,21 +38,14 @@ export function useGames(filters?: {
     })
       .then((data) => {
         if (!active) return;
-        setGames((prev) => {
-          if (isFirstPage) return data;
-          const seen = new Set(prev.map((item) => item.id));
-          return [...prev, ...data.filter((item) => !seen.has(item.id))];
-        });
-        setHasMore(data.length === PAGE_SIZE);
+        setGames(data);
+        setHasNextPage(data.length === PAGE_SIZE);
       })
       .catch((err: Error) => {
         if (active) setError(err.message);
       })
       .finally(() => {
-        if (active) {
-          setLoading(false);
-          setLoadingMore(false);
-        }
+        if (active) setLoading(false);
       });
 
     return () => {
@@ -67,11 +53,28 @@ export function useGames(filters?: {
     };
   }, [debouncedSearch, genre, mode, page]);
 
-  const loadMore = () => {
-    if (!loading && !loadingMore && hasMore) {
+  const nextPage = () => {
+    if (!loading && hasNextPage) {
       setPagination({ filterKey, page: page + 1 });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
-  return { games, loading, loadingMore, hasMore, error, loadMore };
+  const prevPage = () => {
+    if (!loading && page > 1) {
+      setPagination({ filterKey, page: page - 1 });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  return {
+    games,
+    loading,
+    error,
+    page,
+    hasNextPage,
+    hasPrevPage: page > 1,
+    nextPage,
+    prevPage,
+  };
 }

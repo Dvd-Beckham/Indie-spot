@@ -13,6 +13,19 @@ interface PopularityPrimitive {
   value: number;
 }
 
+function getQueryParam(req: VercelRequest, key: string, fallback = ''): string {
+  const fromQuery = req.query?.[key];
+  if (typeof fromQuery === 'string') return fromQuery;
+  if (Array.isArray(fromQuery) && fromQuery[0]) return fromQuery[0];
+
+  if (req.url) {
+    const parsed = new URL(req.url, 'http://localhost');
+    return parsed.searchParams.get(key) ?? fallback;
+  }
+
+  return fallback;
+}
+
 async function getTwitchToken(): Promise<string> {
   if (cachedToken && Date.now() < cachedToken.expiresAt) {
     return cachedToken.token;
@@ -69,7 +82,6 @@ const BASE_FIELDS = `
 function computeFeaturedScore(game: IGDBGameRaw): number {
   const rating = game.rating ?? 0;
   const count = game.rating_count ?? 0;
-  // Normaliza a popularidade em escala logarítmica (0 a 100) e combina com a nota
   const popularityScore = Math.min(Math.log10(count + 1) / 3, 1) * 100;
   return rating * 0.65 + popularityScore * 0.35;
 }
@@ -77,7 +89,17 @@ function computeFeaturedScore(game: IGDBGameRaw): number {
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const token = await getTwitchToken();
-    const { search = '', genre = '', id = '', mode = '' } = req.query;
+
+    const search = getQueryParam(req, 'search');
+    const genre = getQueryParam(req, 'genre');
+    const id = getQueryParam(req, 'id');
+    const mode = getQueryParam(req, 'mode');
+    const page = getQueryParam(req, 'page', '1');
+    const limit = getQueryParam(req, 'limit', '24');
+
+    const safeLimit = Math.min(Math.max(Number(limit) || 24, 1), 100);
+    const safePage = Math.max(Number(page) || 1, 1);
+    const offset = (safePage - 1) * safeLimit;
 
     // 1. Detalhes de um jogo específico
     if (id) {
@@ -94,7 +116,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const primitives = await queryIGDB<PopularityPrimitive[]>(
         'popularity_primitives',
         token,
-        'fields game_id, value; where popularity_type = 3; sort value desc; limit 150;'
+        'fields game_id, value; where popularity_type = 3; sort value desc; limit 500;'
       );
 
       if (primitives.length > 0) {
@@ -104,21 +126,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const popularIndies = await queryIGDB<IGDBGameRaw[]>(
           'games',
           token,
-          `${BASE_FIELDS} where id = (${ids}) & genres = (32) & cover != null; limit 24;`
+          `${BASE_FIELDS} where id = (${ids}) & genres = (32) & cover != null; limit 100;`
         );
 
         popularIndies.sort(
           (a, b) => (scoreByGameId.get(b.id) ?? 0) - (scoreByGameId.get(a.id) ?? 0)
         );
 
-        return res.status(200).json(popularIndies);
+        return res.status(200).json(popularIndies.slice(offset, offset + safeLimit));
       }
 
-      // Fallback caso popularity_primitives não retorne resultados
       const fallback = await queryIGDB<IGDBGameRaw[]>(
         'games',
         token,
-        `${BASE_FIELDS} where genres = (32) & cover != null & rating_count != null; sort rating_count desc; limit 24;`
+        `${BASE_FIELDS} where genres = (32) & cover != null & rating_count != null; sort rating_count desc; limit ${safeLimit}; offset ${offset};`
       );
       return res.status(200).json(fallback);
     }
@@ -128,17 +149,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const candidates = await queryIGDB<IGDBGameRaw[]>(
         'games',
         token,
-        `${BASE_FIELDS} where genres = (32) & cover != null & rating != null & rating_count >= 15; sort rating_count desc; limit 50;`
+        `${BASE_FIELDS} where genres = (32) & cover != null & rating != null & rating_count >= 5; sort rating_count desc; limit 200;`
       );
 
       candidates.sort((a, b) => computeFeaturedScore(b) - computeFeaturedScore(a));
-      return res.status(200).json(candidates.slice(0, 24));
+      return res.status(200).json(candidates.slice(offset, offset + safeLimit));
     }
 
-    // 4. Busca e filtros da página Explorar
+    // 4. Busca e filtros da página Explorar (com paginação via offset)
     const filters: string[] = ['genres = (32)', 'cover != null'];
     if (search) {
-      const sanitized = String(search).replace(/"/g, '').trim();
+      const sanitized = search.replace(/"/g, '').trim();
       if (sanitized) filters.push(`name ~ *"${sanitized}"*`);
     }
     if (genre) {
@@ -148,7 +169,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const games = await queryIGDB<IGDBGameRaw[]>(
       'games',
       token,
-      `${BASE_FIELDS} where ${filters.join(' & ')}; sort rating_count desc; limit 24;`
+      `${BASE_FIELDS} where ${filters.join(' & ')}; sort rating_count desc; limit ${safeLimit}; offset ${offset};`
     );
     return res.status(200).json(games);
   } catch (error) {
