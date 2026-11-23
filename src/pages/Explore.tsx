@@ -1,7 +1,10 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useGames } from '../hooks/useGames';
-import { formatIGDBImage } from '../services/igdbService';
+import { SearchBar } from '../components/games/SearchBar';
+import { GenreFilter } from '../components/games/GenreFilter';
+import { GameGrid } from '../components/games/GameGrid';
+import { LoadingSpinner } from '../components/ui/LoadingSpinner';
+import { EmptyState } from '../components/ui/EmptyState';
 
 export function Explore() {
   const [search, setSearch] = useState('');
@@ -9,41 +12,43 @@ export function Explore() {
   const { games, loading, error } = useGames({ search, genre });
 
   return (
-    <section style={{ padding: '2rem', maxWidth: 1200, margin: '0 auto' }}>
-      <h1>Explorar Catálogo Indie</h1>
+    <section style={{ padding: '2rem 1.5rem', maxWidth: 1200, margin: '0 auto' }}>
+      <h1 style={{ marginBottom: '0.4rem', fontSize: '2rem' }}>
+        Explorar Catálogo Indie
+      </h1>
+      <p style={{ margin: 0, color: '#94a3b8' }}>
+        Busque pelo título ou filtre por subgênero para encontrar seu próximo jogo.
+      </p>
 
-      {/* Substituir pelos componentes <SearchBar /> e <GenreFilter /> do Netinho */}
-      <div style={{ display: 'flex', gap: '1rem', margin: '1rem 0 2rem' }}>
-        <input
-          type="text"
-          placeholder="Buscar jogo indie..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{ padding: '0.6rem', flex: 1, borderRadius: 6 }}
+      <div
+        style={{
+          display: 'flex',
+          gap: '1rem',
+          margin: '1.5rem 0 2rem',
+          flexWrap: 'wrap',
+        }}
+      >
+        <SearchBar value={search} onChange={setSearch} />
+        <GenreFilter value={genre} onChange={setGenre} />
+      </div>
+
+      {loading && <LoadingSpinner message="Buscando jogos indie..." />}
+
+      {!loading && error && (
+        <EmptyState
+          title="Erro ao buscar jogos"
+          description={error}
         />
-        <select value={genre} onChange={(e) => setGenre(e.target.value)} style={{ padding: '0.6rem', borderRadius: 6 }}>
-          <option value="">Todos os subgêneros</option>
-          <option value="8">Plataforma</option>
-          <option value="12">RPG</option>
-          <option value="31">Aventura</option>
-          <option value="15">Estratégia</option>
-          <option value="5">Shooter</option>
-        </select>
-      </div>
+      )}
 
-      {loading && <p>Buscando jogos...</p>}
-      {error && <p style={{ color: '#f87171' }}>{error}</p>}
+      {!loading && !error && games.length === 0 && (
+        <EmptyState
+          title="Nenhum jogo encontrado"
+          description="Tente alterar o termo de busca ou selecionar outro subgênero."
+        />
+      )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1.5rem' }}>
-        {games.map((game) => (
-          <Link key={game.id} to={`/jogo/${game.id}`} style={{ textDecoration: 'none', color: 'inherit', background: '#1e293b', borderRadius: 8, overflow: 'hidden' }}>
-            <img src={formatIGDBImage(game.cover?.url)} alt={game.name} style={{ width: '100%', height: 280, objectFit: 'cover' }} />
-            <div style={{ padding: '0.75rem' }}>
-              <h3 style={{ margin: 0, fontSize: '1rem' }}>{game.name}</h3>
-            </div>
-          </Link>
-        ))}
-      </div>
+      {!loading && !error && games.length > 0 && <GameGrid games={games} />}
     </section>
   );
 }

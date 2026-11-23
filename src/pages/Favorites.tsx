@@ -1,31 +1,30 @@
-import { Link } from 'react-router-dom';
+import { Heart } from 'lucide-react';
 import { useFavorites } from '../contexts/FavoritesContext';
-import { formatIGDBImage } from '../services/igdbService';
+import { GameGrid } from '../components/games/GameGrid';
+import { EmptyState } from '../components/ui/EmptyState';
 
 export function Favorites() {
-  const { favorites, toggleFavorite } = useFavorites();
+  const { favorites } = useFavorites();
 
   return (
-    <section style={{ padding: '2rem', maxWidth: 1200, margin: '0 auto' }}>
-      <h1>Meus Favoritos ({favorites.length})</h1>
+    <section style={{ padding: '2rem 1.5rem', maxWidth: 1200, margin: '0 auto' }}>
+      <h1 style={{ marginBottom: '0.4rem', fontSize: '2rem' }}>
+        Meus Favoritos ({favorites.length})
+      </h1>
+      <p style={{ margin: 0, color: '#94a3b8' }}>
+        Sua lista pessoal fica salva automaticamente neste navegador.
+      </p>
+
       {favorites.length === 0 ? (
-        <p>Nenhum jogo favoritado ainda. Explore o catálogo para salvar seus preferidos.</p>
+        <EmptyState
+          icon={<Heart size={44} strokeWidth={1.6} />}
+          title="Nenhum jogo favoritado ainda"
+          description="Explore o catálogo e clique no coração de um jogo para salvá-lo aqui."
+          actionLabel="Explorar catálogo"
+          actionTo="/explorar"
+        />
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1.5rem', marginTop: '1.5rem' }}>
-          {favorites.map((game) => (
-            <div key={game.id} style={{ background: '#1e293b', borderRadius: 8, overflow: 'hidden' }}>
-              <Link to={`/jogo/${game.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                <img src={formatIGDBImage(game.cover?.url)} alt={game.name} style={{ width: '100%', height: 280, objectFit: 'cover' }} />
-                <div style={{ padding: '0.75rem' }}>
-                  <h3 style={{ margin: 0, fontSize: '1rem' }}>{game.name}</h3>
-                </div>
-              </Link>
-              <button onClick={() => toggleFavorite(game)} style={{ width: '100%', padding: '0.5rem', cursor: 'pointer' }}>
-                Remover
-              </button>
-            </div>
-          ))}
-        </div>
+        <GameGrid games={favorites} />
       )}
     </section>
   );
