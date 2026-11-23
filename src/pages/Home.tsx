@@ -1,11 +1,17 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Flame, Sparkles } from 'lucide-react';
 import { useGames } from '../hooks/useGames';
+import type { GameFeedMode } from '../services/igdbService';
 import { GameGrid } from '../components/games/GameGrid';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { EmptyState } from '../components/ui/EmptyState';
 
 export function Home() {
-  const { games, loading, error } = useGames();
+  const [activeTab, setActiveTab] = useState<GameFeedMode>('featured');
+  const { games, loading, error } = useGames({ mode: activeTab });
+
+  const isPopular = activeTab === 'popular';
 
   return (
     <section style={{ padding: '2rem 1.5rem', maxWidth: 1200, margin: '0 auto' }}>
@@ -16,15 +22,17 @@ export function Home() {
           alignItems: 'flex-end',
           flexWrap: 'wrap',
           gap: '1rem',
-          marginBottom: '1rem',
+          marginBottom: '1.25rem',
         }}
       >
         <div>
           <h1 style={{ marginBottom: '0.4rem', fontSize: '2rem' }}>
-            Indie Spot — Destaques Indie
+            {isPopular ? 'Indie Spot — Populares Agora' : 'Indie Spot — Destaques Indie'}
           </h1>
           <p style={{ margin: 0, color: '#94a3b8' }}>
-            Descubra jogos independentes bem avaliados pela comunidade.
+            {isPopular
+              ? 'Jogos independentes mais jogados recentemente na comunidade IGDB.'
+              : 'Seleção combinando popularidade e nota dos melhores jogos independentes.'}
           </p>
         </div>
 
@@ -44,11 +52,82 @@ export function Home() {
         </Link>
       </div>
 
-      {loading && <LoadingSpinner message="Carregando destaques indie..." />}
+      {/* Abas de alternância */}
+      <div
+        role="tablist"
+        aria-label="Filtrar vitrine da página inicial"
+        style={{
+          display: 'inline-flex',
+          gap: '0.5rem',
+          padding: '0.35rem',
+          background: '#1e293b',
+          border: '1px solid #334155',
+          borderRadius: 10,
+          marginBottom: '0.5rem',
+        }}
+      >
+        <button
+          type="button"
+          role="tab"
+          aria-selected={!isPopular}
+          onClick={() => setActiveTab('featured')}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.45rem',
+            padding: '0.55rem 1rem',
+            borderRadius: 8,
+            border: 'none',
+            cursor: 'pointer',
+            fontWeight: 600,
+            fontSize: '0.9rem',
+            background: !isPopular ? '#7c3aed' : 'transparent',
+            color: !isPopular ? '#f8fafc' : '#94a3b8',
+            transition: 'background 0.2s, color 0.2s',
+          }}
+        >
+          <Sparkles size={16} />
+          Destaques Indie
+        </button>
+
+        <button
+          type="button"
+          role="tab"
+          aria-selected={isPopular}
+          onClick={() => setActiveTab('popular')}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.45rem',
+            padding: '0.55rem 1rem',
+            borderRadius: 8,
+            border: 'none',
+            cursor: 'pointer',
+            fontWeight: 600,
+            fontSize: '0.9rem',
+            background: isPopular ? '#7c3aed' : 'transparent',
+            color: isPopular ? '#f8fafc' : '#94a3b8',
+            transition: 'background 0.2s, color 0.2s',
+          }}
+        >
+          <Flame size={16} />
+          Populares
+        </button>
+      </div>
+
+      {loading && (
+        <LoadingSpinner
+          message={
+            isPopular
+              ? 'Carregando jogos indie mais jogados recentemente...'
+              : 'Carregando destaques indie...'
+          }
+        />
+      )}
 
       {!loading && error && (
         <EmptyState
-          title="Não foi possível carregar os destaques"
+          title="Não foi possível carregar os jogos"
           description={error}
           actionLabel="Tentar em Explorar"
           actionTo="/explorar"
@@ -57,13 +136,13 @@ export function Home() {
 
       {!loading && !error && games.length === 0 && (
         <EmptyState
-          title="Nenhum destaque disponível"
-          description="Não encontramos jogos no momento. Tente novamente em instantes."
+          title="Nenhum jogo disponível"
+          description="Não encontramos jogos para esta aba no momento. Tente novamente em instantes."
         />
       )}
 
       {!loading && !error && games.length > 0 && (
-        <GameGrid games={games.slice(0, 8)} />
+        <GameGrid games={games.slice(0, 12)} />
       )}
     </section>
   );

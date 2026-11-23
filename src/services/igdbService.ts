@@ -1,5 +1,7 @@
 import type { IGDBGame } from '../types/game';
 
+export type GameFeedMode = 'featured' | 'popular';
+
 export function formatIGDBImage(
   url?: string,
   size: 't_cover_big' | 't_screenshot_big' = 't_cover_big'
@@ -14,10 +16,12 @@ export function formatIGDBImage(
 export async function fetchIndieGames(params?: {
   search?: string;
   genre?: string;
+  mode?: GameFeedMode;
 }): Promise<IGDBGame[]> {
   const query = new URLSearchParams();
   if (params?.search) query.set('search', params.search);
   if (params?.genre) query.set('genre', params.genre);
+  if (params?.mode) query.set('mode', params.mode);
 
   const response = await fetch(`/api/games?${query.toString()}`);
   if (!response.ok) {

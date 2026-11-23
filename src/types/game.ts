@@ -13,6 +13,7 @@ export interface IGDBGame {
   name: string;
   summary?: string;
   rating?: number;
+  rating_count?: number;
   first_release_date?: number;
   cover?: IGDBImage;
   genres?: IGDBTag[];
