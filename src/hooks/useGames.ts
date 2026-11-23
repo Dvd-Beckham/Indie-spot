@@ -4,39 +4,74 @@ import { fetchIndieGames } from '../services/igdbService';
 import type { GameFeedMode } from '../services/igdbService';
 import { useDebounce } from './useDebounce';
 
+const PAGE_SIZE = 24;
+
 export function useGames(filters?: {
   search?: string;
   genre?: string;
   mode?: GameFeedMode;
 }) {
-  const [games, setGames] = useState<IGDBGame[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-
   const debouncedSearch = useDebounce(filters?.search ?? '', 400);
   const genre = filters?.genre ?? '';
   const mode = filters?.mode;
+  const filterKey = `${debouncedSearch}|${genre}|${mode ?? ''}`;
+
+  const [games, setGames] = useState<IGDBGame[]>([]);
+  const [pagination, setPagination] = useState({ filterKey, page: 1 });
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const page = pagination.filterKey === filterKey ? pagination.page : 1;
 
   useEffect(() => {
     let active = true;
-    setLoading(true);
+    const isFirstPage = page === 1;
+
+    if (isFirstPage) {
+      setLoading(true);
+    } else {
+      setLoadingMore(true);
+    }
     setError(null);
 
-    fetchIndieGames({ search: debouncedSearch, genre, mode })
+    fetchIndieGames({
+      search: debouncedSearch,
+      genre,
+      mode,
+      page,
+      limit: PAGE_SIZE,
+    })
       .then((data) => {
-        if (active) setGames(data);
+        if (!active) return;
+        setGames((prev) => {
+          if (isFirstPage) return data;
+          const seen = new Set(prev.map((item) => item.id));
+          return [...prev, ...data.filter((item) => !seen.has(item.id))];
+        });
+        setHasMore(data.length === PAGE_SIZE);
       })
       .catch((err: Error) => {
         if (active) setError(err.message);
       })
       .finally(() => {
-        if (active) setLoading(false);
+        if (active) {
+          setLoading(false);
+          setLoadingMore(false);
+        }
       });
 
     return () => {
       active = false;
     };
-  }, [debouncedSearch, genre, mode]);
+  }, [debouncedSearch, genre, mode, page]);
 
-  return { games, loading, error };
+  const loadMore = () => {
+    if (!loading && !loadingMore && hasMore) {
+      setPagination({ filterKey, page: page + 1 });
+    }
+  };
+
+  return { games, loading, loadingMore, hasMore, error, loadMore };
 }

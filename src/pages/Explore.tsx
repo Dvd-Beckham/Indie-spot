@@ -9,7 +9,10 @@ import { EmptyState } from '../components/ui/EmptyState';
 export function Explore() {
   const [search, setSearch] = useState('');
   const [genre, setGenre] = useState('');
-  const { games, loading, error } = useGames({ search, genre });
+  const { games, loading, loadingMore, hasMore, error, loadMore } = useGames({
+    search,
+    genre,
+  });
 
   return (
     <section style={{ padding: '2rem 1.5rem', maxWidth: 1200, margin: '0 auto' }}>
@@ -35,10 +38,7 @@ export function Explore() {
       {loading && <LoadingSpinner message="Buscando jogos indie..." />}
 
       {!loading && error && (
-        <EmptyState
-          title="Erro ao buscar jogos"
-          description={error}
-        />
+        <EmptyState title="Erro ao buscar jogos" description={error} />
       )}
 
       {!loading && !error && games.length === 0 && (
@@ -48,7 +48,37 @@ export function Explore() {
         />
       )}
 
-      {!loading && !error && games.length > 0 && <GameGrid games={games} />}
+      {!loading && !error && games.length > 0 && (
+        <>
+          <p style={{ margin: '0 0 0.5rem', fontSize: '0.85rem', color: '#94a3b8' }}>
+            Exibindo {games.length} jogos
+          </p>
+
+          <GameGrid games={games} />
+
+          {hasMore && (
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2rem' }}>
+              <button
+                type="button"
+                onClick={loadMore}
+                disabled={loadingMore}
+                style={{
+                  padding: '0.75rem 1.75rem',
+                  borderRadius: 8,
+                  border: '1px solid #7c3aed',
+                  background: loadingMore ? '#334155' : '#7c3aed',
+                  color: '#f8fafc',
+                  fontWeight: 600,
+                  fontSize: '0.95rem',
+                  cursor: loadingMore ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {loadingMore ? 'Carregando mais jogos...' : 'Carregar mais jogos'}
+              </button>
+            </div>
+          )}
+        </>
+      )}
     </section>
   );
 }

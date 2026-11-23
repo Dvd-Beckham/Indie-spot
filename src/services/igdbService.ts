@@ -17,11 +17,15 @@ export async function fetchIndieGames(params?: {
   search?: string;
   genre?: string;
   mode?: GameFeedMode;
+  page?: number;
+  limit?: number;
 }): Promise<IGDBGame[]> {
   const query = new URLSearchParams();
   if (params?.search) query.set('search', params.search);
   if (params?.genre) query.set('genre', params.genre);
   if (params?.mode) query.set('mode', params.mode);
+  if (params?.page) query.set('page', String(params.page));
+  if (params?.limit) query.set('limit', String(params.limit));
 
   const response = await fetch(`/api/games?${query.toString()}`);
   if (!response.ok) {
