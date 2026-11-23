@@ -14,78 +14,29 @@ export function GameCard({ game }: GameCardProps) {
     : null;
 
   return (
-    <article
-      style={{
-        background: '#1e293b',
-        border: '1px solid #334155',
-        borderRadius: 10,
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-      }}
-    >
-      <Link
-        to={`/jogo/${game.id}`}
-        style={{
-          textDecoration: 'none',
-          color: 'inherit',
-          display: 'flex',
-          flexDirection: 'column',
-          flex: 1,
-        }}
-      >
-        <div style={{ position: 'relative' }}>
+    <article className="game-card">
+      <Link to={`/jogo/${game.id}`} className="game-card-link">
+        <div className="game-card-media">
           <img
             src={formatIGDBImage(game.cover?.url)}
             alt={game.name}
             loading="lazy"
-            style={{
-              width: '100%',
-              height: 290,
-              objectFit: 'cover',
-              display: 'block',
-            }}
+            className="game-card-cover"
           />
 
-          <div style={{ position: 'absolute', top: '0.6rem', left: '0.6rem' }}>
+          <div className="game-card-badge-left">
             <RatingBadge rating={game.rating} />
           </div>
 
-          <div style={{ position: 'absolute', top: '0.6rem', right: '0.6rem' }}>
+          <div className="game-card-badge-right">
             <FavoriteButton game={game} variant="icon" />
           </div>
         </div>
 
-        <div
-          style={{
-            padding: '0.85rem',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.35rem',
-            flex: 1,
-          }}
-        >
-          <h3
-            style={{
-              margin: 0,
-              fontSize: '1rem',
-              color: '#f8fafc',
-              lineHeight: 1.3,
-            }}
-          >
-            {game.name}
-          </h3>
+        <div className="game-card-body">
+          <h3 className="game-card-title">{game.name}</h3>
 
-          <div
-            style={{
-              marginTop: 'auto',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              fontSize: '0.8rem',
-              color: '#94a3b8',
-            }}
-          >
+          <div className="game-card-meta">
             <span>{game.genres?.[0]?.name ?? 'Indie'}</span>
             {releaseYear && <span>{releaseYear}</span>}
           </div>

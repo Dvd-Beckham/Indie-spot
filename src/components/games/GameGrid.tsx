@@ -11,14 +11,7 @@ export function GameGrid({ games }: GameGridProps) {
   }
 
   return (
-    <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-        gap: '1.5rem',
-        marginTop: '1.5rem',
-      }}
-    >
+    <div className="game-grid">
       {games.map((game) => (
         <GameCard key={game.id} game={game} />
       ))}

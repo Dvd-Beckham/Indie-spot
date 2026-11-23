@@ -141,8 +141,8 @@ export function Home() {
         />
       )}
 
-      {!loading && !error && games.length > 0 && (
-        <GameGrid games={games.slice(0, 12)} />
+     {!loading && !error && games.length > 0 && (
+        <GameGrid games={games.slice(0, 30)} />
       )}
     </section>
   );
