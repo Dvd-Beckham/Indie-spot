@@ -68,7 +68,7 @@ indie-spot/
 ### 2. Clonar e instalar dependências
 
 ```bash
-git clone <URL_DO_SEU_REPOSITORIO_NO_GITHUB>
+git clone <https://github.com/Dvd-Beckham/Indie-spot>
 cd indie-spot
 npm install
 ```
