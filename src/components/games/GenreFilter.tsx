@@ -7,11 +7,21 @@ interface GenreOption {
 
 const INDIE_GENRES: GenreOption[] = [
   { id: '', label: 'Todos os subgêneros' },
+  { id: '31', label: 'Aventura' },
   { id: '8', label: 'Plataforma' },
   { id: '12', label: 'RPG' },
-  { id: '31', label: 'Aventura' },
+  { id: '9', label: 'Puzzle' },
   { id: '15', label: 'Estratégia' },
+  { id: '16', label: 'Estratégia por Turnos (TBS)' },
+  { id: '13', label: 'Simulador' },
   { id: '5', label: 'Shooter' },
+  { id: '25', label: "Hack and Slash / Beat 'em up" },
+  { id: '33', label: 'Arcade' },
+  { id: '2', label: 'Point-and-Click' },
+  { id: '34', label: 'Visual Novel' },
+  { id: '35', label: 'Cartas & Tabuleiro' },
+  { id: '4', label: 'Luta' },
+  { id: '10', label: 'Corrida' },
 ];
 
 interface GenreFilterProps {
@@ -44,7 +54,7 @@ export function GenreFilter({ value, onChange }: GenreFilterProps) {
           border: '1px solid #334155',
           background: '#1e293b',
           color: '#f8fafc',
-          fontSize: '0.95rem',
+          fontSize: '0.9rem',
           cursor: 'pointer',
           outline: 'none',
         }}

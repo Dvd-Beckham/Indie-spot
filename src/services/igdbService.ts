@@ -1,6 +1,7 @@
 import type { IGDBGame } from '../types/game';
 
 export type GameFeedMode = 'featured' | 'popular';
+export type GameSortOption = 'popular' | 'rating' | 'recent' | 'name';
 
 export function formatIGDBImage(
   url?: string,
@@ -16,6 +17,9 @@ export function formatIGDBImage(
 export async function fetchIndieGames(params?: {
   search?: string;
   genre?: string;
+  platform?: string;
+  minRating?: string;
+  sort?: GameSortOption;
   mode?: GameFeedMode;
   page?: number;
   limit?: number;
@@ -23,6 +27,9 @@ export async function fetchIndieGames(params?: {
   const query = new URLSearchParams();
   if (params?.search) query.set('search', params.search);
   if (params?.genre) query.set('genre', params.genre);
+  if (params?.platform) query.set('platform', params.platform);
+  if (params?.minRating) query.set('minRating', params.minRating);
+  if (params?.sort) query.set('sort', params.sort);
   if (params?.mode) query.set('mode', params.mode);
   if (params?.page) query.set('page', String(params.page));
   if (params?.limit) query.set('limit', String(params.limit));

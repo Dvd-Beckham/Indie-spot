@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { IGDBGame } from '../types/game';
 import { fetchIndieGames } from '../services/igdbService';
-import type { GameFeedMode } from '../services/igdbService';
+import type { GameFeedMode, GameSortOption } from '../services/igdbService';
 import { useDebounce } from './useDebounce';
 
 const PAGE_SIZE = 24;
@@ -9,12 +9,19 @@ const PAGE_SIZE = 24;
 export function useGames(filters?: {
   search?: string;
   genre?: string;
+  platform?: string;
+  minRating?: string;
+  sort?: GameSortOption;
   mode?: GameFeedMode;
 }) {
   const debouncedSearch = useDebounce(filters?.search ?? '', 400);
   const genre = filters?.genre ?? '';
+  const platform = filters?.platform ?? '';
+  const minRating = filters?.minRating ?? '';
+  const sort = filters?.sort ?? 'popular';
   const mode = filters?.mode;
-  const filterKey = `${debouncedSearch}|${genre}|${mode ?? ''}`;
+
+  const filterKey = `${debouncedSearch}|${genre}|${platform}|${minRating}|${sort}|${mode ?? ''}`;
 
   const [games, setGames] = useState<IGDBGame[]>([]);
   const [pagination, setPagination] = useState({ filterKey, page: 1 });
@@ -32,6 +39,9 @@ export function useGames(filters?: {
     fetchIndieGames({
       search: debouncedSearch,
       genre,
+      platform,
+      minRating,
+      sort,
       mode,
       page,
       limit: PAGE_SIZE,
@@ -51,7 +61,7 @@ export function useGames(filters?: {
     return () => {
       active = false;
     };
-  }, [debouncedSearch, genre, mode, page]);
+  }, [debouncedSearch, genre, platform, minRating, sort, mode, page]);
 
   const nextPage = () => {
     if (!loading && hasNextPage) {

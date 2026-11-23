@@ -92,6 +92,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const search = getQueryParam(req, 'search');
     const genre = getQueryParam(req, 'genre');
+    const platform = getQueryParam(req, 'platform');
+    const minRating = getQueryParam(req, 'minRating');
+    const sort = getQueryParam(req, 'sort', 'popular');
     const id = getQueryParam(req, 'id');
     const mode = getQueryParam(req, 'mode');
     const page = getQueryParam(req, 'page', '1');
@@ -145,7 +148,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // 3. Aba "Destaques Indie" — ordenado por popularidade + nota
-    if (mode === 'featured' && !search && !genre) {
+    if (mode === 'featured' && !search && !genre && !platform && !minRating) {
       const candidates = await queryIGDB<IGDBGameRaw[]>(
         'games',
         token,
@@ -156,20 +159,43 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json(candidates.slice(offset, offset + safeLimit));
     }
 
-    // 4. Busca e filtros da página Explorar (com paginação via offset)
+    // 4. Busca e filtros avançados da página Explorar
     const filters: string[] = ['genres = (32)', 'cover != null'];
+
     if (search) {
       const sanitized = search.replace(/"/g, '').trim();
       if (sanitized) filters.push(`name ~ *"${sanitized}"*`);
     }
-    if (genre) {
+
+    if (genre && !Number.isNaN(Number(genre))) {
       filters.push(`genres = (${Number(genre)})`);
+    }
+
+    if (platform && !Number.isNaN(Number(platform))) {
+      filters.push(`platforms = (${Number(platform)})`);
+    }
+
+    if (minRating && !Number.isNaN(Number(minRating))) {
+      filters.push(`rating >= ${Number(minRating)}`);
+    }
+
+    let sortClause = 'sort rating_count desc;';
+    if (sort === 'rating') {
+      filters.push('rating != null');
+      if (!search) filters.push('rating_count >= 5');
+      sortClause = 'sort rating desc;';
+    } else if (sort === 'recent') {
+      const nowUnix = Math.floor(Date.now() / 1000);
+      filters.push(`first_release_date != null & first_release_date <= ${nowUnix}`);
+      sortClause = 'sort first_release_date desc;';
+    } else if (sort === 'name') {
+      sortClause = 'sort name asc;';
     }
 
     const games = await queryIGDB<IGDBGameRaw[]>(
       'games',
       token,
-      `${BASE_FIELDS} where ${filters.join(' & ')}; sort rating_count desc; limit ${safeLimit}; offset ${offset};`
+      `${BASE_FIELDS} where ${filters.join(' & ')}; ${sortClause} limit ${safeLimit}; offset ${offset};`
     );
     return res.status(200).json(games);
   } catch (error) {
