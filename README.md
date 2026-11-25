@@ -19,11 +19,11 @@ Aplicação web desenvolvida em **React + TypeScript + Vite** para a disciplina 
 
 | Integrante | Componentes Funcionais | Arquivos | Responsabilidade Principal |
 | :--- | :--- | :--- | :--- |
-| **Beckham** | `Navbar` e `Footer` | `src/components/layout/Navbar.tsx`<br>`src/components/layout/Footer.tsx` | Navegação global com destaque de rota ativa (`NavLink`), contador dinâmico de favoritos e rodapé com créditos da IGDB |
-| **Letícia** | `GameCard` e `RatingBadge` | `src/components/games/GameCard.tsx`<br>`src/components/games/RatingBadge.tsx` | Card responsivo de cada jogo (capa `3:4`, gênero, ano, link para detalhes) e selo de nota com cor condicional |
-| **Netinho** | `SearchBar` e `GenreFilter` | `src/components/games/SearchBar.tsx`<br>`src/components/games/GenreFilter.tsx` | Campo de busca controlado com botão de limpar e seletor com 15 subgêneros oficiais da IGDB |
+| **David Beckham** | `Navbar` e `Footer` | `src/components/layout/Navbar.tsx`<br>`src/components/layout/Footer.tsx` | Navegação global com destaque de rota ativa (`NavLink`), contador dinâmico de favoritos e rodapé com créditos da IGDB |
+| **Ana Letícia** | `GameCard` e `RatingBadge` | `src/components/games/GameCard.tsx`<br>`src/components/games/RatingBadge.tsx` | Card responsivo de cada jogo (capa `3:4`, gênero, ano, link para detalhes) e selo de nota com cor condicional |
+| **Agostinho Pereira** | `SearchBar` e `GenreFilter` | `src/components/games/SearchBar.tsx`<br>`src/components/games/GenreFilter.tsx` | Campo de busca controlado com botão de limpar e seletor com 15 subgêneros oficiais da IGDB |
 | **Grazielly** | `GameGrid` e `FavoriteButton` | `src/components/games/GameGrid.tsx`<br>`src/components/ui/FavoriteButton.tsx` | Grade responsiva (6 colunas no desktop / 4 no mobile) e botão de favoritar integrado ao `FavoritesContext` |
-| **Matheus** | `LoadingSpinner` e `EmptyState` | `src/components/ui/LoadingSpinner.tsx`<br>`src/components/ui/EmptyState.tsx` | Indicador animado de carregamento e estado vazio/erro reutilizável com ação de retorno |
+| **Matheus Medeiros** | `LoadingSpinner` e `EmptyState` | `src/components/ui/LoadingSpinner.tsx`<br>`src/components/ui/EmptyState.tsx` | Indicador animado de carregamento e estado vazio/erro reutilizável com ação de retorno |
 
 ## Principais Funcionalidades
 
